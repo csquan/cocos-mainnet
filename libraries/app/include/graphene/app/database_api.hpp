@@ -123,6 +123,17 @@ struct market_trade
       account_id_type side2_account_id = GRAPHENE_NULL_ACCOUNT;
 };
 
+struct vesting_balance_object_with_info : public vesting_balance_object
+{
+    vesting_balance_object_with_info(const vesting_balance_object &vbo, fc::time_point_sec now);
+    vesting_balance_object_with_info(const vesting_balance_object_with_info &vbo) = default;
+     vesting_balance_object_with_info();
+    asset allowed_withdraw;
+
+    fc::time_point_sec allowed_withdraw_time;
+};
+
+
 enum class nh_asset_list_type
 {
     only_active = 0,        // target with NHA active permission only 
@@ -331,7 +342,7 @@ class database_api
 
       vector<asset> get_vested_balances(const vector<balance_id_type> &objs) const;
 
-      vector<vesting_balance_object> get_vesting_balances(account_id_type account_id) const;
+      vector<vesting_balance_object_with_info> get_vesting_balances(account_id_type account_id) const;
 
       /**
        * @brief Get the total number of accounts registered with the blockchain
@@ -674,6 +685,8 @@ FC_REFLECT(graphene::app::market_ticker,
 FC_REFLECT(graphene::app::market_volume, (time)(base)(quote)(base_volume)(quote_volume));
 FC_REFLECT(graphene::app::market_trade, (sequence)(date)(price)(amount)(value)(side1_account_id)(side2_account_id));
 FC_REFLECT_ENUM(graphene::app::nh_asset_list_type, (only_active)(only_owner)(all_active)(all_owner)(owner_and_active));
+FC_REFLECT_DERIVED(graphene::app::vesting_balance_object_with_info, (graphene::chain::vesting_balance_object),
+                  (allowed_withdraw)(allowed_withdraw_time))
 
 FC_API(graphene::app::database_api,
        // Objects

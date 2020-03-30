@@ -138,7 +138,7 @@ class database_api_impl : public std::enable_shared_from_this<database_api_impl>
     vector<asset> get_named_account_balances(const std::string &name, const flat_set<asset_id_type> &assets) const;
     vector<balance_object> get_balance_objects(const vector<address> &addrs) const;
     vector<asset> get_vested_balances(const vector<balance_id_type> &objs) const;
-    vector<vesting_balance_object> get_vesting_balances(account_id_type account_id) const;
+    vector<vesting_balance_object_with_info> get_vesting_balances(account_id_type account_id) const;
 
     // Assets
     vector<optional<asset_object>> get_assets(const vector<asset_id_type> &asset_ids) const;
@@ -1095,22 +1095,31 @@ vector<asset> database_api_impl::get_vested_balances(const vector<balance_id_typ
     FC_CAPTURE_AND_RETHROW((objs))
 }
 
-vector<vesting_balance_object> database_api::get_vesting_balances(account_id_type account_id) const
+vector<vesting_balance_object_with_info> database_api::get_vesting_balances(account_id_type account_id) const
 {
     return my->get_vesting_balances(account_id);
 }
 
-vector<vesting_balance_object> database_api_impl::get_vesting_balances(account_id_type account_id) const
+vector<vesting_balance_object_with_info> database_api_impl::get_vesting_balances(account_id_type account_id) const
 {
     try
     {
+        vector<vesting_balance_object_with_info> ret;
         vector<vesting_balance_object> result;
+        fc::time_point_sec now = get_dynamic_global_properties().time;
+
         auto vesting_range = _db.get_index_type<vesting_balance_index>().indices().get<by_account>().equal_range(account_id);
         std::for_each(vesting_range.first, vesting_range.second,
                       [&result](const vesting_balance_object &balance) {
                           result.emplace_back(balance);
                       });
-        return result;
+
+        if (result.size() == 0)
+            return ret;
+
+        for (const vesting_balance_object &vbo : result)
+            ret.emplace_back(vbo, now);
+        return ret;
     }
     FC_CAPTURE_AND_RETHROW((account_id));
 }
@@ -2855,5 +2864,17 @@ vector<asset_restricted_object> database_api::list_asset_restricted_objects(cons
 {
     return my->list_asset_restricted_objects(asset_id, restricted_type);
 }
+
+vesting_balance_object_with_info::vesting_balance_object_with_info(const vesting_balance_object &vbo, fc::time_point_sec now)
+    : vesting_balance_object(vbo)
+{
+      allowed_withdraw = get_allowed_withdraw(now);
+      allowed_withdraw_time = now;
+}
+vesting_balance_object_with_info::vesting_balance_object_with_info()
+{
+
+}
+
 } // namespace app
 } // namespace graphene
