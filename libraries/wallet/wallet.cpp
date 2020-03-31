@@ -1572,28 +1572,15 @@ public:
       {
             try
             {
-                  fc::optional<vesting_balance_id_type> vbid = maybe_id<vesting_balance_id_type>(account_name);
-                  std::vector<vesting_balance_object_with_info> result;
-                  fc::time_point_sec now = _remote_db->get_dynamic_global_properties().time;
+                vector<vesting_balance_object_with_info> result;
+                fc::time_point_sec now = _remote_db->get_dynamic_global_properties().time;
+                
+                auto rets = _remote_db->get_vesting_balances(account_name);
 
-                  if (vbid)
-                  {
-                        result.emplace_back(get_object<vesting_balance_object>(*vbid), now);
-                        return result;
-                  }
+                for (auto  &vbo : rets)
+                     result.emplace_back(vbo, now);
 
-                  // try casting to avoid a round-trip if we were given an account ID
-                  fc::optional<account_id_type> acct_id = maybe_id<account_id_type>(account_name);
-                  if (!acct_id)
-                        acct_id = get_account(account_name).id;
-
-                  auto rets = _remote_db->get_vesting_balances(*acct_id);
-
-                  for(const vesting_balance_object &vbo : rets)
-                  {
-                       result.emplace_back(vbo, now);
-                  }
-                  return result;
+                return result;
             }
             FC_CAPTURE_AND_RETHROW((account_name))
       }

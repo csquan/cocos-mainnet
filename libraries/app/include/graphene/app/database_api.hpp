@@ -127,7 +127,7 @@ struct vesting_balance_object_with_info : public vesting_balance_object
 {
     vesting_balance_object_with_info(const vesting_balance_object &vbo, fc::time_point_sec now);
     vesting_balance_object_with_info(const vesting_balance_object_with_info &vbo) = default;
-     vesting_balance_object_with_info();
+    vesting_balance_object_with_info();
     asset allowed_withdraw;
 
     fc::time_point_sec allowed_withdraw_time;
@@ -342,7 +342,7 @@ class database_api
 
       vector<asset> get_vested_balances(const vector<balance_id_type> &objs) const;
 
-      vector<vesting_balance_object_with_info> get_vesting_balances(account_id_type account_id) const;
+      vector<vesting_balance_object_with_info> get_vesting_balances(string account_name) const;
 
       /**
        * @brief Get the total number of accounts registered with the blockchain
