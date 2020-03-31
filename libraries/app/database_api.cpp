@@ -24,7 +24,8 @@
 
 #include <graphene/app/database_api.hpp>
 #include <graphene/chain/get_config.hpp>
-#include <graphene/chain/vesting_balance_object.hpp>
+
+#include <graphene/db/object_database.hpp>
 
 #include <fc/bloom_filter.hpp>
 #include <fc/smart_ref_impl.hpp>
@@ -1109,9 +1110,12 @@ vector<vesting_balance_object_with_info> database_api_impl::get_vesting_balances
         std::vector<vesting_balance_object_with_info> result;
         fc::time_point_sec now = get_dynamic_global_properties().time;
 
+
         if (vbid)
         {
-            //result.emplace_back(_db.get_object<vesting_balance_object>(*vbid), now);
+            auto vbo1_tmp = _db.find_object(*vbid);
+            const vesting_balance_object *vbo1 = static_cast<const vesting_balance_object*>(vbo1_tmp);
+            result.emplace_back(*vbo1, now);
             return result;
         }
 
