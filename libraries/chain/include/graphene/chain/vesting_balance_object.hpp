@@ -95,7 +95,7 @@ namespace graphene { namespace chain {
       /** while coindays may accrue over time, none may be claimed before first_claim date */
       fc::time_point_sec             start_claim;
       fc::time_point_sec             coin_seconds_earned_last_update;
-
+      fc::uint128_t                  coins_last_full = 0;
       /**
        * Compute coin_seconds_earned.  Used to
        * non-destructively figure out how many coin seconds
@@ -211,6 +211,7 @@ FC_REFLECT(graphene::chain::cdd_vesting_policy,
            (start_claim)
            (coin_seconds_earned)
            (coin_seconds_earned_last_update)
+           (coins_last_full)
           )
 
 FC_REFLECT_TYPENAME( graphene::chain::vesting_policy )

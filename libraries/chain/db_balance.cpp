@@ -146,6 +146,18 @@ optional<vesting_balance_id_type> database::deposit_lazy_vesting(
             break;
         if (vbo.describe != describe)
             break;
+        
+        auto vesting_seconds = 600;
+
+        int64_t delta_seconds = (now - vbo.create_time).to_seconds();
+        if(delta_seconds > vesting_seconds & delta_seconds % vesting_seconds == 0)
+        {
+            assert(amount <= balance);
+            on_withdraw_visitor vtor(balance, now, amount);
+            vbo.policy.visit(vtor);
+            vbo.balance -= amount;
+        }
+  
         modify(vbo, [&](vesting_balance_object &_vbo) {
             if (require_vesting)
                 _vbo.deposit(now, amount);
@@ -161,6 +173,7 @@ optional<vesting_balance_id_type> database::deposit_lazy_vesting(
         _vbo.create_time = now;
 
         cdd_vesting_policy policy;
+        policy.start_claim = now;
         policy.vesting_seconds = req_vesting_seconds;
         policy.coin_seconds_earned = require_vesting ? 0 : amount.amount.value * policy.vesting_seconds;
         policy.coin_seconds_earned_last_update = now;
