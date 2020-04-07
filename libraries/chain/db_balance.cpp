@@ -147,15 +147,17 @@ optional<vesting_balance_id_type> database::deposit_lazy_vesting(
         if (vbo.describe != describe)
             break;
         
-        auto vesting_seconds = 600;
+        
+        auto vbo1 = const_cast<vesting_balance_object*> (&vbo);
 
+        int64_t vesting_seconds = 600;
         int64_t delta_seconds = (now - vbo.create_time).to_seconds();
         if(delta_seconds > vesting_seconds & delta_seconds % vesting_seconds == 0)
         {
-            assert(amount <= balance);
-            on_withdraw_visitor vtor(balance, now, amount);
-            vbo.policy.visit(vtor);
-            vbo.balance -= amount;
+            ilog("delta_seconds: ${x}",("x",delta_seconds));
+            ilog("amount: ${x}",("x",amount));
+            vbo1->withdraw( now, amount );
+            
         }
   
         modify(vbo, [&](vesting_balance_object &_vbo) {

@@ -87,7 +87,7 @@ bool linear_vesting_policy::is_withdraw_allowed(const vesting_policy_context& ct
           && (ctx.amount <= get_allowed_withdraw(ctx));
 }
 
-fc::uint128 compute_coin_seconds_earned8_t cdd_vesting_policy::compute_coin_seconds_earned(const vesting_policy_context& ctx)const
+fc::uint128  cdd_vesting_policy::compute_coin_seconds_earned(const vesting_policy_context& ctx)const
 {
    assert(ctx.now >= coin_seconds_earned_last_update);
    int64_t delta_seconds = (ctx.now - coin_seconds_earned_last_update).to_seconds();
@@ -209,8 +209,6 @@ void vesting_balance_object::deposit(const time_point_sec& now, const asset& amo
    on_deposit_visitor vtor(balance, now, amount);
    policy.visit(vtor);
    balance += amount;
-
-   if()
 }
 
 void vesting_balance_object::deposit_vested(const time_point_sec& now, const asset& amount)
