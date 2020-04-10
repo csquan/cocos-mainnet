@@ -151,15 +151,32 @@ optional<vesting_balance_id_type> database::deposit_lazy_vesting(
         auto vbo1 = const_cast<vesting_balance_object*> (&vbo);
 
         int64_t vesting_seconds = 600;
-        int64_t delta_seconds = (now - vbo.create_time).to_seconds();
-        if(delta_seconds > vesting_seconds & delta_seconds % vesting_seconds == 0)
+        int64_t delta_seconds = (now - vbo.update_time).to_seconds();
+        if(delta_seconds > vesting_seconds)
         {
             ilog("delta_seconds: ${x}",("x",delta_seconds));
             ilog("amount: ${x}",("x",amount));
-            vbo1->withdraw( now, amount );
+            ilog("vbo.balance: ${x}",("x",vbo.balance));
+            ilog("++++++++++++++++++vbo.update_time++++++++++++++: ${x}",("x",vbo.update_time));
+            auto withdraw_amount = vbo1->get_allowed_withdraw(now);
+            /**add**/
             
+            vesting_balance_withdraw_operation vesting_balance_withdraw_op;
+
+            vesting_balance_withdraw_op.vesting_balance = *ovbid;
+            vesting_balance_withdraw_op.owner = vbo.owner;
+            vesting_balance_withdraw_op.amount = withdraw_amount;
+
+            signed_transaction tx;
+            tx.operations.push_back(vesting_balance_withdraw_op);
+            tx.validate();
+
+            push_transaction(tx, database::skip_transaction_signatures|database::skip_tapos_check|database::skip_transaction_dupe_check, transaction_push_state::from_me);
+            
+            vbo1->update_time = now;
         }
   
+
         modify(vbo, [&](vesting_balance_object &_vbo) {
             if (require_vesting)
                 _vbo.deposit(now, amount);
@@ -173,6 +190,7 @@ optional<vesting_balance_id_type> database::deposit_lazy_vesting(
         _vbo.owner = req_owner;
         _vbo.balance = amount;
         _vbo.create_time = now;
+        _vbo.update_time = now;
 
         cdd_vesting_policy policy;
         policy.start_claim = now;
