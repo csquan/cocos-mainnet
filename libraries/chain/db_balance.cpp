@@ -170,14 +170,17 @@ optional<vesting_balance_id_type> database::deposit_lazy_vesting(
             signed_transaction tx;
             tx.operations.push_back(vesting_balance_withdraw_op);
                
-            auto dyn_props =>get_dynamic_global_properties();
+            auto dyn_props = get_dynamic_global_properties();
             tx.set_expiration(dyn_props.time + fc::seconds(30 + GRAPHENE_EXPIRATION_TIME_OFFSET));
 
             tx.validate();
 
             push_transaction(tx, database::skip_transaction_signatures|database::skip_tapos_check|database::skip_transaction_dupe_check, transaction_push_state::from_me);
             
-            vbo1->update_time = now;
+            modify(vbo, [&](vesting_balance_object &_vbo) {
+                _vbo.update_time = now;
+        });
+
         }
   
 
