@@ -129,6 +129,7 @@ void_result vesting_balance_withdraw_evaluator::do_apply( const vesting_balance_
 
    d.modify( vbo, [&]( vesting_balance_object& vbo )
    {
+      ilog("-------withdraw amount: ${x}",("x",op.amount));
       vbo.withdraw( now, op.amount );
    } );
 

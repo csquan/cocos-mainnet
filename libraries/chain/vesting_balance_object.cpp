@@ -204,6 +204,12 @@ bool vesting_balance_object::is_withdraw_allowed(const time_point_sec& now, cons
    return result;
 }
 
+void vesting_balance_object::update_vbotime(const time_point_sec& now)
+{
+   ilog("----------update_time set now----------: ${x}",("x",now));
+   update_time = now;
+}
+
 void vesting_balance_object::deposit(const time_point_sec& now, const asset& amount)
 {
    on_deposit_visitor vtor(balance, now, amount);

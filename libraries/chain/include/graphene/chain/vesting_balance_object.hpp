@@ -146,6 +146,7 @@ namespace graphene { namespace chain {
 
          vesting_balance_object() {}
 
+         void update_vbotime(const time_point_sec& now);
          ///@brief Deposit amount into vesting balance, requiring it to vest before withdrawal
          void deposit(const fc::time_point_sec& now, const asset& amount);
          bool is_deposit_allowed(const fc::time_point_sec& now, const asset& amount)const;
