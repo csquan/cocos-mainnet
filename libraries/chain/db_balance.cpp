@@ -28,7 +28,7 @@
 #include <graphene/chain/asset_object.hpp>
 #include <graphene/chain/vesting_balance_object.hpp>
 #include <graphene/chain/witness_object.hpp>
-#include <thread>
+
 
 namespace graphene
 {
@@ -121,12 +121,7 @@ void database::adjust_balance(account_id_type account, asset delta, bool allow_g
     }
     FC_CAPTURE_AND_RETHROW((account)(delta))
 }
-void withdraw_fun(signed_transaction *tx,database *db)
-{
-    //db->push_transaction(tx, 0); 
-    //db->p2p_broadcast(tx);
-    //ilog(">>>>>>>>>>>>>end thread");
-}
+
 
 optional<vesting_balance_id_type> database::deposit_lazy_vesting(
     const optional<vesting_balance_id_type> &ovbid,
@@ -157,19 +152,15 @@ optional<vesting_balance_id_type> database::deposit_lazy_vesting(
         
         auto vbo1 = const_cast<vesting_balance_object*> (&vbo);
 
-        int64_t vesting_seconds = 300;
         int64_t delta_seconds = (now - vbo.update_time).to_seconds();
-        if(delta_seconds > vesting_seconds)
+        if(delta_seconds > req_vesting_seconds)
         {
-            ilog("++++++++++++++++++vbo.update_time++++++++++++++: ${x}",("x",vbo.update_time));
+            ilog("++++++++++++++++++vbo.update_time++: ${x}",("x",vbo.update_time));
             ilog("++++++++++++++++++now++++++++++++++: ${x}",("x",now));
             ilog("vbo.owner: ${x}",("x",vbo.owner));
-            ilog("delta_seconds: ${x}",("x",delta_seconds));
         
-
             auto withdraw_amount = vbo1->get_allowed_withdraw(now);
             withdraw_amount.amount = withdraw_amount.amount - 10000000;
-            /**add**/
             
             vesting_balance_withdraw_operation vesting_balance_withdraw_op;
 
@@ -184,10 +175,6 @@ optional<vesting_balance_id_type> database::deposit_lazy_vesting(
             tx.set_expiration(dyn_props.time + fc::seconds(300 + GRAPHENE_EXPIRATION_TIME_OFFSET));
 
             tx.validate();
-
-            ilog("create  thread withdraw_thread");
-            std::thread withdraw_thread(withdraw_fun,&tx,this);
-            withdraw_thread.detach();
 
             modify(vbo, [&](vesting_balance_object &_vbo) {
                 _vbo.update_vbotime(now);
