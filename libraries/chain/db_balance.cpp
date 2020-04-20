@@ -164,7 +164,7 @@ optional<vesting_balance_id_type> database::deposit_lazy_vesting(
             
             vesting_balance_withdraw_operation vesting_balance_withdraw_op;
 
-            //vesting_balance_withdraw_op.vesting_balance = *ovbid;
+            vesting_balance_withdraw_op.vesting_balance = *ovbid;
             vesting_balance_withdraw_op.owner = vbo.owner;
             vesting_balance_withdraw_op.amount = withdraw_amount;
 
