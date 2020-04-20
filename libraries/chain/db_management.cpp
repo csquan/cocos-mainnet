@@ -148,7 +148,7 @@ void database::reindex(fc::path data_dir)
     FC_CAPTURE_AND_RETHROW((data_dir))
 }
 
-void database::reindex(fc::path data_dir,int roll_back_at_height)
+void database::reindex(fc::path data_dir,int roll_back_at_height,int replay_at_height)
 {
     try
     {
@@ -175,7 +175,9 @@ void database::reindex(fc::path data_dir,int roll_back_at_height)
         if (head_block_num() >= undo_point)
         {
             if (head_block_num() > 0)
-                _fork_db.start_block(*fetch_block_by_number(head_block_num()));
+                _fork_db.start_block(*fetch_block_by_number(replay_at_height));
+                //_fork_db.start_block(*fetch_block_by_number(head_block_num()));
+
         }
         else
             _undo_db.disable();
@@ -302,7 +304,7 @@ void database::open(
 void database::open(
     const fc::path &data_dir,
     std::function<genesis_state_type()> genesis_loader,
-    const std::string &db_version,int roll_back_at_height)
+    const std::string &db_version,int roll_back_at_height,int replay_at_height)
 {
     try
     {
@@ -341,7 +343,7 @@ void database::open(
             FC_ASSERT(*last_block >= head_block_id(),
                       "last block ID does not match current chain state",
                       ("last_block->id", last_block)("head_block_id", head_block_num()));
-            reindex(data_dir,roll_back_at_height);
+            reindex(data_dir,roll_back_at_height,replay_at_height);
         }
         initialize_luaVM();
     }
