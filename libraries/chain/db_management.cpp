@@ -171,19 +171,23 @@ void database::reindex(fc::path data_dir,int roll_back_at_height,int replay_at_h
             
         uint32_t undo_point = last_block_num < 50 ? 0 : last_block_num - 50;
 
-        ilog("Replaying blocks, starting at ${next}...", ("next", head_block_num() + 1));
+        auto start_block = head_block_num() + 1;
+
+        if(replay_at_height!=0)
+            start_block = replay_at_height;
+            
+        ilog("Replaying blocks, starting at ${next}...", ("next", start_block));
         if (head_block_num() >= undo_point)
         {
             if (head_block_num() > 0)
-                _fork_db.start_block(*fetch_block_by_number(replay_at_height));
-                //_fork_db.start_block(*fetch_block_by_number(head_block_num()));
+                _fork_db.start_block(*fetch_block_by_number(head_block_num()));
 
         }
         else
             _undo_db.disable();
         int progrees0=0;
         double progrees1;
-        for (uint32_t i = head_block_num() + 1; i <= last_block_num; ++i)
+        for (uint32_t i = start_block; i <= last_block_num; ++i)
         {
             if (i % 10000 == 0)
             {   
