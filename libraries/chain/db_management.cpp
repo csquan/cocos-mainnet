@@ -173,8 +173,17 @@ void database::reindex(fc::path data_dir,int roll_back_at_height,int replay_at_h
 
         auto start_block = head_block_num() + 1;
 
+        auto skip = skip_witness_signature |
+                                    skip_transaction_signatures |   //
+                                    skip_transaction_dupe_check |   //
+                                    skip_tapos_check |
+                                    skip_witness_schedule_check |
+                                    skip_authority_check; 
+
         if(replay_at_height!=0)
+        {
             start_block = replay_at_height;
+        }    
             
         ilog("Replaying blocks, starting at ${next}...", ("next", start_block));
         if (head_block_num() >= undo_point)
@@ -220,25 +229,18 @@ void database::reindex(fc::path data_dir,int roll_back_at_height,int replay_at_h
                 wlog("Dropped ${n} blocks from after the gap", ("n", dropped_count));
                 break;
             }
-            if (i < undo_point)
+            if(!(skip | skip_validate))
             {
-                apply_block(*block, skip_witness_signature |
-                                        skip_transaction_signatures |   //
-                                        skip_transaction_dupe_check |   //
-                                        skip_tapos_check |
-                                        skip_witness_schedule_check |
-                                        skip_authority_check);
-            }
-            else
-            {
-                _undo_db.enable();
-                push_block(*block, skip_witness_signature |
-                                       skip_transaction_signatures |
-                                       skip_transaction_dupe_check |
-                                       skip_tapos_check |
-                                       skip_witness_schedule_check |
-                                       skip_authority_check);
-            }
+                if (i < undo_point)
+                {             
+                   apply_block(*block, skip);
+                }
+                else
+                {
+                   _undo_db.enable();
+                   push_block(*block, skip);
+                }
+            } 
         }
         _undo_db.enable();
         auto end = fc::time_point::now();
